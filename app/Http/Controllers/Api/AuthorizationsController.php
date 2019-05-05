@@ -5,9 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\AuthorizationRequest;
 use App\Http\Requests\Api\SocialAuthorizationRequest;
 use App\Models\User;
+use App\Traits\PassportToken;
+use Laravel\Passport\HasApiTokens;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Exception\OAuthServerException;
+use Psr\Http\Message\ServerRequestInterface;
 
 class AuthorizationsController extends Controller
 {
+    use PassportToken;
+
     public function socialStore($type, SocialAuthorizationRequest $request)
     {
         if (!in_array($type, ['weixin'])) {
@@ -56,25 +63,37 @@ class AuthorizationsController extends Controller
                 break;
         }
 
-        $token = Auth::guard('api')->fromUser($user);
-        return $this->respondWithToken($token)->setStatusCode(201);
+        $result = $this->getBearerTokenByUser($user, '1', false);
+        return $this->response->array($result)->setStatusCode(201);
+
+//        $token = Auth::guard('api')->fromUser($user);
+//        return $this->respondWithToken($token)->setStatusCode(201);
     }
 
-    public function store(AuthorizationRequest $request)
+//    public function store(AuthorizationRequest $request)
+//    {
+//        $username = $request->username;
+//
+//        filter_var($username, FILTER_VALIDATE_EMAIL) ?
+//            $credentials['email'] = $username :
+//            $credentials['phone'] = $username;
+//
+//        $credentials['password'] = $request->password;
+//
+//        if (!$token = \Auth::guard('api')->attempt($credentials)) {
+//            return $this->response->errorUnauthorized('用户名或密码错误');
+//        }
+//
+//        return $this->respondWithToken($token)->setStatusCode(201);
+//    }
+
+    public function store(AuthorizationRequest $originRequest, AuthorizationServer $server, ServerRequestInterface $serverRequest)
     {
-        $username = $request->username;
-
-        filter_var($username, FILTER_VALIDATE_EMAIL) ?
-            $credentials['email'] = $username :
-            $credentials['phone'] = $username;
-
-        $credentials['password'] = $request->password;
-
-        if (!$token = \Auth::guard('api')->attempt($credentials)) {
-            return $this->response->errorUnauthorized('用户名或密码错误');
+        try {
+            return $server->respondToAccessTokenRequest($serverRequest, new Psr7Response)->withStatus(201);
+        } catch(OAuthServerException $e) {
+            return $this->response->errorUnauthorized($e->getMessage());
         }
-
-        return $this->respondWithToken($token)->setStatusCode(201);
     }
 
 
@@ -87,10 +106,18 @@ class AuthorizationsController extends Controller
         ]);
     }
 
-    public function update()
+//    public function update()
+//    {
+//        $token = \Auth::guard('api')->refresh();
+//        return $this->respondWithToken($token);
+//    }
+    public function update(AuthorizationServer $server, ServerRequestInterface $serverRequest)
     {
-        $token = \Auth::guard('api')->refresh();
-        return $this->respondWithToken($token);
+        try {
+            return $server->respondToAccessTokenRequest($serverRequest, new Psr7Response);
+        } catch(OAuthServerException $e) {
+            return $this->response->errorUnauthorized($e->getMessage());
+        }
     }
 
     public function destroy()
