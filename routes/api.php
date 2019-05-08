@@ -60,6 +60,9 @@ $api->version('v1',[
             // 编辑登录用户信息
             $api->patch('user', 'UsersController@update')
                 ->name('api.user.update');
+            //小程序编辑
+            $api->put('user', 'UsersController@update')
+                ->name('api.user.update');
             // 图片资源
             $api->post('images', 'ImagesController@store')
                 ->name('api.images.store');
@@ -107,12 +110,18 @@ $api->version('v1',[
         // 小程序登录
         $api->post('weapp/authorizations', 'AuthorizationsController@weappStore')
             ->name('api.weapp.authorizations.store');
+        // 小程序注册
+        $api->post('weapp/users', 'UsersController@weappStore')
+            ->name('api.weapp.users.store');
         // 刷新token
         $api->put('authorizations/current', 'AuthorizationsController@update')
             ->name('api.authorizations.update');
         // 删除token
         $api->delete('authorizations/current', 'AuthorizationsController@destroy')
             ->name('api.authorizations.destroy');
+        // 用户详情
+        $api->get('users/{user}', 'UsersController@show')
+            ->name('api.users.show');
     });
 });
 

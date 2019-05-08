@@ -6,6 +6,7 @@ use App\Http\Requests\Api\AuthorizationRequest;
 use App\Http\Requests\Api\SocialAuthorizationRequest;
 use App\Http\Requests\Api\WeappAuthorizationRequest;
 use App\Models\User;
+use Auth;
 
 class AuthorizationsController extends Controller
 {
