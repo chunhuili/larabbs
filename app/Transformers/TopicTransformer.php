@@ -36,4 +36,9 @@ class TopicTransformer extends TransformerAbstract
     {
         return $this->item($topic->category, new CategoryTransformer());
     }
+
+    public function includeTopReplies(Topic $topic)
+    {
+        return $this->collection($topic->topReplies, new ReplyTransformer());
+    }
 }
